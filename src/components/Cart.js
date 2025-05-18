@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../styles/Cart.css";
+import { plantList } from "../datas/plantList";
 
 function Cart({ cart, updateCart }) {
     const [isOpen, setIsOpen] = useState(true);
@@ -7,6 +8,31 @@ function Cart({ cart, updateCart }) {
         (acc, plantType) => acc + plantType.amount * plantType.price,
         0
     );
+
+    useEffect(() => {
+        document.title = `LMJ: ${total}€ d'achats`;
+    }, [total]);
+
+    // Sauvegarde du panier à chaque modification
+    useEffect(() => {
+        // Ajout des items
+        for (let item of cart) {
+            localStorage.setItem(`${item.name}`, JSON.stringify(item));
+        }
+    }, [cart]);
+
+    // Récupération du panier au premier chargement de la page
+    useEffect(() => {
+        const savedItems = [];
+        for (let { name } of plantList) {
+            const item = localStorage.getItem(`${name}`);
+            if (item) {
+                savedItems.push(JSON.parse(item));
+            }
+        }
+        updateCart(savedItems);
+    }, []);
+
     return isOpen ? (
         <div className="lmj-cart">
             <button
@@ -26,7 +52,12 @@ function Cart({ cart, updateCart }) {
                         ))}
                     </ul>
                     <h3>Total :{total}€</h3>
-                    <button onClick={() => updateCart([])}>
+                    <button
+                        onClick={() => {
+                            updateCart([]);
+                            localStorage.clear();
+                        }}
+                    >
                         Vider le panier
                     </button>
                 </div>
